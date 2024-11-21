@@ -98,12 +98,12 @@ function init() {
     });
 
     // Load sprites directly from files
-    sprites.cat.src = 'assets/cat.png';
-    sprites.carRed.src = 'assets/car_red.png';
-    sprites.carBlue.src = 'assets/car_blue.png';
-    sprites.carYellow.src = 'assets/car_yellow.png';
-    sprites.powerup.src = 'assets/powerup.png';
-    sprites.tree.src = 'assets/tree.png';
+    sprites.cat.src = '/crossy-cat/assets/cat.png';
+    sprites.carRed.src = '/crossy-cat/assets/car_red.png';
+    sprites.carBlue.src = '/crossy-cat/assets/car_blue.png';
+    sprites.carYellow.src = '/crossy-cat/assets/car_yellow.png';
+    sprites.powerup.src = '/crossy-cat/assets/powerup.png';
+    sprites.tree.src = '/crossy-cat/assets/tree.png';
 }
 
 function finishInitialization() {

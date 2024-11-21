@@ -46,30 +46,57 @@ const sprites = {
     tree: new Image()
 };
 
-let loadedSprites = 0;
-const totalSprites = 6;
+// Promise-based sprite loading with timeout
+function loadSprite(sprite, src) {
+    return new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+            reject(new Error(`Timeout loading sprite: ${src}`));
+        }, 5000); // 5 second timeout
 
-function onSpriteLoad() {
-    loadedSprites++;
-    if (loadedSprites === totalSprites) {
-        document.getElementById('startScreen').style.display = 'block';
-        document.getElementById('loading').style.display = 'none';
-    }
+        sprite.onload = () => {
+            clearTimeout(timeout);
+            resolve();
+        };
+
+        sprite.onerror = () => {
+            clearTimeout(timeout);
+            reject(new Error(`Failed to load sprite: ${src}`));
+        };
+
+        sprite.src = src;
+    });
 }
 
-sprites.cat.onload = onSpriteLoad;
-sprites.carRed.onload = onSpriteLoad;
-sprites.carBlue.onload = onSpriteLoad;
-sprites.carYellow.onload = onSpriteLoad;
-sprites.powerup.onload = onSpriteLoad;
-sprites.tree.onload = onSpriteLoad;
+// Load all sprites with progress tracking
+async function loadAllSprites() {
+    const totalSprites = Object.keys(sprites).length;
+    let loadedCount = 0;
 
-sprites.cat.src = 'assets/cat.png';
-sprites.carRed.src = 'assets/car_red.png';
-sprites.carBlue.src = 'assets/car_blue.png';
-sprites.carYellow.src = 'assets/car_yellow.png';
-sprites.powerup.src = 'assets/powerup.png';
-sprites.tree.src = 'assets/tree.png';
+    const updateProgress = () => {
+        loadedCount++;
+        const progress = Math.floor((loadedCount / totalSprites) * 100);
+        document.getElementById('loading').textContent = `Loading game assets... ${progress}%`;
+    };
+
+    try {
+        await Promise.all([
+            loadSprite(sprites.cat, 'assets/cat.png').then(updateProgress),
+            loadSprite(sprites.carRed, 'assets/car_red.png').then(updateProgress),
+            loadSprite(sprites.carBlue, 'assets/car_blue.png').then(updateProgress),
+            loadSprite(sprites.carYellow, 'assets/car_yellow.png').then(updateProgress),
+            loadSprite(sprites.powerup, 'assets/powerup.png').then(updateProgress),
+            loadSprite(sprites.tree, 'assets/tree.png').then(updateProgress)
+        ]);
+
+        // All sprites loaded successfully
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('startScreen').style.display = 'block';
+    } catch (error) {
+        // Handle loading errors
+        console.error('Error loading sprites:', error);
+        document.getElementById('loading').textContent = 'Error loading game assets. Please refresh the page.';
+    }
+}
 
 // Game variables
 let canvas, ctx;
@@ -98,6 +125,9 @@ const powerups = [];
 function init() {
     canvas = document.getElementById('gameCanvas');
     ctx = canvas.getContext('2d');
+    
+    // Start loading sprites
+    loadAllSprites();
     
     // Initialize roads
     for (let y = 0; y < CANVAS_HEIGHT + 60; y += 60) {

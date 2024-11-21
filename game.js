@@ -49,6 +49,22 @@ let lastTimestamp = 0;
 let shields = MAX_SHIELDS;
 let keyPressCount = {};
 let lastKeyPressTime = {};
+let playerName = '';
+let previousScore = 0;
+
+// Encouraging messages for when player doesn't beat their previous score
+const encouragingMessages = [
+    "You're getting better! Keep going!",
+    "So close! Give it another shot!",
+    "Practice makes perfect! Try again!",
+    "You've got this! One more try!",
+    "Almost there! Keep pushing!",
+    "Don't give up! You're improving!",
+    "That was a good run! Try again!",
+    "Keep that momentum going!",
+    "You're learning the patterns! Next time!",
+    "Every attempt makes you stronger!"
+];
 
 // Game objects
 const cat = {
@@ -174,6 +190,16 @@ function update() {
     if (frameCount % (FORCE_FORWARD_INTERVAL * 1.5) === 0) {
         cat.y -= 30;
         score += 10;
+        
+        // If cat is too high, move everything down
+        if (cat.y < CANVAS_HEIGHT / 4) {
+            const offset = CANVAS_HEIGHT / 3 - cat.y;
+            cat.y += offset;
+            
+            // Move all game objects down
+            cars.forEach(car => car.y += offset);
+            roads.forEach(road => road.y += offset);
+        }
     }
     
     // Update roads and spawn cars
@@ -388,6 +414,8 @@ function gameLoop(timestamp) {
 
 // Start game
 function startGame() {
+    playerName = document.getElementById('playerName').value.trim() || 'Player';
+    previousScore = score;
     gameState = 'playing';
     document.getElementById('startScreen').style.display = 'none';
     document.getElementById('gameOver').style.display = 'none';
@@ -397,7 +425,20 @@ function startGame() {
 // Game over
 function gameOver() {
     gameState = 'gameOver';
+    const wasHighScore = score > highScore;
+    const beatPreviousScore = score > previousScore;
     highScore = Math.max(score, highScore);
+    
+    let message = '';
+    if (wasHighScore) {
+        message = `🎉 Congratulations ${playerName}! New high score: ${score}! 🏆`;
+    } else if (beatPreviousScore) {
+        message = `Well done ${playerName}! You beat your previous score of ${previousScore}! 🌟`;
+    } else {
+        message = `${encouragingMessages[Math.floor(Math.random() * encouragingMessages.length)]} ${playerName}!`;
+    }
+    
+    document.getElementById('gameOverMessage').textContent = message;
     document.getElementById('finalScore').textContent = score;
     document.getElementById('highScore').textContent = highScore;
     document.getElementById('gameOver').style.display = 'block';

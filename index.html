@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crossy Cat</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #333;
+            font-family: Arial, sans-serif;
+        }
+        #gameContainer {
+            position: relative;
+        }
+        #gameCanvas {
+            border: 2px solid #fff;
+        }
+        #score {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-size: 24px;
+            z-index: 1;
+        }
+        #gameOver {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 2;
+        }
+        #startScreen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 2;
+        }
+        button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div id="score">Score: 0</div>
+        <div id="gameOver">
+            <h1>Game Over!</h1>
+            <p>Score: <span id="finalScore">0</span></p>
+            <p>High Score: <span id="highScore">0</span></p>
+            <button onclick="resetGame()">Play Again</button>
+        </div>
+        <div id="startScreen">
+            <h1>Crossy Cat</h1>
+            <p>Use LEFT and RIGHT arrow keys to move</p>
+            <p>Collect stars for bonus points</p>
+            <p>Avoid cars!</p>
+            <button onclick="startGame()">Start Game</button>
+        </div>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>

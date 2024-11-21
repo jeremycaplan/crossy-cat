@@ -6,6 +6,51 @@ const FORCE_FORWARD_INTERVAL = 120;
 const POWERUP_CHANCE = 0.1;
 const POWERUP_BONUS = 50;
 
+// Create sound effects using AudioContext
+const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+function createBeep(frequency, duration, type = 'sine') {
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.type = type;
+    oscillator.frequency.value = frequency;
+    
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    return {
+        play: () => {
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + duration);
+        }
+    };
+}
+
+const sounds = {
+    collect: () => createBeep(880, 0.1),
+    crash: () => createBeep(150, 0.2, 'sawtooth'),
+    move: () => createBeep(440, 0.05)
+};
+
+// Load sprites
+const sprites = {
+    cat: new Image(),
+    carRed: new Image(),
+    carBlue: new Image(),
+    carYellow: new Image(),
+    powerup: new Image()
+};
+
+sprites.cat.src = 'assets/cat.png';
+sprites.carRed.src = 'assets/car_red.png';
+sprites.carBlue.src = 'assets/car_blue.png';
+sprites.carYellow.src = 'assets/car_yellow.png';
+sprites.powerup.src = 'assets/powerup.png';
+
 // Game variables
 let canvas, ctx;
 let gameState = 'start'; // 'start', 'playing', 'gameOver'
@@ -53,10 +98,16 @@ function handleKeyPress(event) {
     if (gameState === 'playing') {
         switch (event.key) {
             case 'ArrowLeft':
-                if (cat.x > 0) cat.x -= cat.speed;
+                if (cat.x > 0) {
+                    cat.x -= cat.speed;
+                    sounds.move().play();
+                }
                 break;
             case 'ArrowRight':
-                if (cat.x < CANVAS_WIDTH - cat.width) cat.x += cat.speed;
+                if (cat.x < CANVAS_WIDTH - cat.width) {
+                    cat.x += cat.speed;
+                    sounds.move().play();
+                }
                 break;
         }
     }
@@ -72,7 +123,7 @@ function spawnCar(roadY) {
         speed: goingLeft ? -speed : speed,
         width: 60,
         height: 30,
-        color: ['#ff0000', '#0000ff', '#ffff00'][Math.floor(Math.random() * 3)]
+        type: Math.floor(Math.random() * 3) // Random car type
     };
 }
 
@@ -132,6 +183,7 @@ function update() {
             if (checkCollision(cat, powerupRect)) {
                 road.powerupCollected = true;
                 score += POWERUP_BONUS;
+                sounds.collect().play();
             }
         }
     });
@@ -178,22 +230,31 @@ function draw() {
 
         // Draw powerup
         if (road.hasPowerup && !road.powerupCollected) {
-            ctx.fillStyle = '#ffd700';
-            ctx.beginPath();
-            ctx.arc(road.powerupX + 15, road.y + 15, 10, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.drawImage(sprites.powerup, road.powerupX, road.y, 30, 30);
         }
     });
 
     // Draw cars
     cars.forEach(car => {
-        ctx.fillStyle = car.color;
-        ctx.fillRect(car.x, car.y, car.width, car.height);
+        const carSprite = [sprites.carRed, sprites.carBlue, sprites.carYellow][car.type];
+        // Flip the car sprite if moving left
+        if (car.speed < 0) {
+            ctx.save();
+            ctx.scale(-1, 1);
+            ctx.drawImage(carSprite, -car.x - car.width, car.y, car.width, car.height);
+            ctx.restore();
+        } else {
+            ctx.drawImage(carSprite, car.x, car.y, car.width, car.height);
+        }
     });
 
     // Draw cat
-    ctx.fillStyle = cat.color;
-    ctx.fillRect(cat.x, cat.y, cat.width, cat.height);
+    ctx.drawImage(sprites.cat, cat.x, cat.y, cat.width, cat.height);
+
+    // Draw Wonder Tools label
+    ctx.font = '16px Arial';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.fillText('A Wonder Tools Game', 10, CANVAS_HEIGHT - 10);
 }
 
 // Game loop
@@ -225,6 +286,7 @@ function gameOver() {
     document.getElementById('finalScore').textContent = score;
     document.getElementById('highScore').textContent = highScore;
     document.getElementById('gameOver').style.display = 'block';
+    sounds.crash().play();
 }
 
 // Reset game

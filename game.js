@@ -122,6 +122,10 @@ function handleKeyPress(event) {
                 cat.x += speed;
                 sounds.move().play();
                 break;
+            case 'ArrowUp':
+                cat.y = Math.max(cat.y - speed, 0);
+                sounds.move().play();
+                break;
             case 'ArrowDown':
                 cat.y = Math.min(cat.y + speed, CANVAS_HEIGHT - cat.height);
                 sounds.move().play();
@@ -313,9 +317,21 @@ function draw() {
     ctx.fillText('A Wonder Tools Game', 10, CANVAS_HEIGHT - 10);
     
     // Draw shields remaining
-    ctx.font = '20px Arial';
+    ctx.font = 'bold 24px Arial';
     ctx.fillStyle = '#00FFFF';
-    ctx.fillText(`Shields: ${shields}`, 10, 30);
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 2;
+    const shieldText = `Shields: ${shields}`;
+    ctx.strokeText(shieldText, 10, 30);
+    ctx.fillText(shieldText, 10, 30);
+    
+    // Draw score
+    const scoreText = `Score: ${score}`;
+    ctx.font = 'bold 24px Arial';
+    ctx.fillStyle = '#FFFFFF';
+    ctx.strokeStyle = '#000000';
+    ctx.strokeText(scoreText, CANVAS_WIDTH - 150, 30);
+    ctx.fillText(scoreText, CANVAS_WIDTH - 150, 30);
 }
 
 // Draw a simple tree

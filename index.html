@@ -92,11 +92,22 @@
             <p>High Score: <span id="highScore">0</span></p>
             <button onclick="resetGame()">Play Again</button>
         </div>
-        <div id="startScreen" style="display: none;">
+        <div id="startScreen">
             <h1>Crossy Cat</h1>
-            <p>Use LEFT and RIGHT arrow keys to move</p>
-            <p>Collect stars for bonus points</p>
-            <p>Avoid cars!</p>
+            <h2>Instructions:</h2>
+            <p>Use arrow keys to move:</p>
+            <ul>
+                <li>← → to move left/right</li>
+                <li>↑ to move forward faster</li>
+                <li>↓ to move backward</li>
+                <li>Press keys rapidly for speed boost!</li>
+            </ul>
+            <p>Special Powers:</p>
+            <ul>
+                <li>SPACEBAR activates shield (3 uses)</li>
+                <li>Shield protects from crashes for 3 seconds</li>
+                <li>Collect ⭐ stars for bonus points</li>
+            </ul>
             <button onclick="startGame()">Start Game</button>
         </div>
     </div>

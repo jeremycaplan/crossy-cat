@@ -55,49 +55,9 @@ const sprites = {
     tree: new Image()
 };
 
-// Load all sprites immediately from base64 data
-function loadAllSprites() {
-    return new Promise((resolve, reject) => {
-        try {
-            let loadedCount = 0;
-            const totalSprites = Object.keys(sprites).length;
-            
-            const updateProgress = () => {
-                loadedCount++;
-                const progress = Math.floor((loadedCount / totalSprites) * 100);
-                document.getElementById('loading').textContent = `Loading game assets... ${progress}%`;
-                if (loadedCount === totalSprites) {
-                    document.getElementById('loading').style.display = 'none';
-                    document.getElementById('startScreen').style.display = 'block';
-                    resolve();
-                }
-            };
-
-            // Set the source of each sprite from the base64 data
-            sprites.cat.onload = updateProgress;
-            sprites.carRed.onload = updateProgress;
-            sprites.carBlue.onload = updateProgress;
-            sprites.carYellow.onload = updateProgress;
-            sprites.powerup.onload = updateProgress;
-            sprites.tree.onload = updateProgress;
-
-            sprites.cat.src = SPRITE_DATA.cat;
-            sprites.carRed.src = SPRITE_DATA.car_red;
-            sprites.carBlue.src = SPRITE_DATA.car_blue;
-            sprites.carYellow.src = SPRITE_DATA.car_yellow;
-            sprites.powerup.src = SPRITE_DATA.powerup;
-            sprites.tree.src = SPRITE_DATA.tree;
-        } catch (error) {
-            console.error('Error loading sprites:', error);
-            document.getElementById('loading').textContent = 'Error loading game assets. Please refresh the page.';
-            reject(error);
-        }
-    });
-}
-
 // Game variables
 let canvas, ctx;
-let gameState = 'start'; // 'start', 'playing', 'gameOver'
+let gameState = 'start';
 let score = 0;
 let highScore = 0;
 let frameCount = 0;
@@ -110,8 +70,7 @@ const cat = {
     height: 40,
     x: CANVAS_WIDTH / 2,
     y: CANVAS_HEIGHT - 120,
-    speed: 4,
-    color: '#666' // Temporary color until we add sprites
+    speed: 4
 };
 
 const roads = [];
@@ -120,12 +79,56 @@ const powerups = [];
 
 // Initialize game
 function init() {
+    console.log('Initializing game...');
+    
+    // Check if sprite data is available
+    if (!window.SPRITE_DATA) {
+        console.error('Sprite data not found');
+        document.getElementById('loading').textContent = 'Error: Game assets not found. Please refresh the page.';
+        return;
+    }
+
     canvas = document.getElementById('gameCanvas');
     ctx = canvas.getContext('2d');
     
-    // Start loading sprites
-    loadAllSprites();
+    let loadedSprites = 0;
+    const totalSprites = Object.keys(sprites).length;
     
+    function onSpriteLoad() {
+        loadedSprites++;
+        console.log(`Loaded sprite ${loadedSprites}/${totalSprites}`);
+        
+        if (loadedSprites === totalSprites) {
+            console.log('All sprites loaded');
+            finishInitialization();
+        }
+    }
+    
+    // Load all sprites
+    try {
+        Object.keys(sprites).forEach(key => {
+            sprites[key].onload = onSpriteLoad;
+            sprites[key].onerror = (error) => {
+                console.error(`Error loading sprite: ${key}`, error);
+                document.getElementById('loading').textContent = 'Error loading game assets. Please refresh.';
+            };
+        });
+        
+        // Set sprite sources
+        sprites.cat.src = SPRITE_DATA.cat;
+        sprites.carRed.src = SPRITE_DATA.car_red;
+        sprites.carBlue.src = SPRITE_DATA.car_blue;
+        sprites.carYellow.src = SPRITE_DATA.car_yellow;
+        sprites.powerup.src = SPRITE_DATA.powerup;
+        sprites.tree.src = SPRITE_DATA.tree;
+        
+    } catch (error) {
+        console.error('Error loading sprites:', error);
+        document.getElementById('loading').textContent = 'Error initializing game. Please refresh.';
+    }
+}
+
+function finishInitialization() {
     // Initialize roads
     for (let y = 0; y < CANVAS_HEIGHT + 60; y += 60) {
         roads.push({
@@ -138,6 +141,12 @@ function init() {
 
     // Add event listeners
     document.addEventListener('keydown', handleKeyPress);
+    
+    // Hide loading screen and show start screen
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('startScreen').style.display = 'block';
+    
+    console.log('Game initialized successfully');
 }
 
 // Handle keyboard input

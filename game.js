@@ -5,6 +5,8 @@ const SCROLL_SPEED = 0.5;
 const FORCE_FORWARD_INTERVAL = 180;
 const POWERUP_CHANCE = 0.1;
 const POWERUP_BONUS = 50;
+const MAX_SHIELDS = 3;
+const SPEED_MULTIPLIER = 2;
 
 // Create sound effects using AudioContext
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -44,6 +46,9 @@ let highScore = 0;
 let frameCount = 0;
 let scrollOffset = 0;
 let lastTimestamp = 0;
+let shields = MAX_SHIELDS;
+let keyPressCount = {};
+let lastKeyPressTime = {};
 
 // Game objects
 const cat = {
@@ -52,7 +57,8 @@ const cat = {
     x: CANVAS_WIDTH / 2,
     y: CANVAS_HEIGHT - 120,
     speed: 4,
-    color: '#FFD700' // Gold color for the cat
+    color: '#FFD700', // Gold color for the cat
+    isShielded: false
 };
 
 const roads = [];
@@ -88,14 +94,46 @@ function init() {
 // Handle keyboard input
 function handleKeyPress(event) {
     if (gameState === 'playing') {
-        switch (event.key) {
+        const currentTime = Date.now();
+        const key = event.key;
+        
+        // Initialize or update key press tracking
+        if (!lastKeyPressTime[key]) {
+            lastKeyPressTime[key] = currentTime;
+            keyPressCount[key] = 1;
+        } else if (currentTime - lastKeyPressTime[key] < 200) { // Within 200ms
+            keyPressCount[key]++;
+            lastKeyPressTime[key] = currentTime;
+        } else {
+            keyPressCount[key] = 1;
+            lastKeyPressTime[key] = currentTime;
+        }
+        
+        // Calculate speed based on rapid key presses
+        const baseSpeed = cat.speed;
+        const speed = keyPressCount[key] >= 3 ? baseSpeed * SPEED_MULTIPLIER : baseSpeed;
+        
+        switch (key) {
             case 'ArrowLeft':
-                cat.x -= cat.speed;
+                cat.x -= speed;
                 sounds.move().play();
                 break;
             case 'ArrowRight':
-                cat.x += cat.speed;
+                cat.x += speed;
                 sounds.move().play();
+                break;
+            case 'ArrowDown':
+                cat.y = Math.min(cat.y + speed, CANVAS_HEIGHT - cat.height);
+                sounds.move().play();
+                break;
+            case ' ': // Spacebar activates shield
+                if (shields > 0 && !cat.isShielded) {
+                    cat.isShielded = true;
+                    shields--;
+                    setTimeout(() => {
+                        cat.isShielded = false;
+                    }, 3000); // Shield lasts 3 seconds
+                }
                 break;
         }
         cat.x = Math.min(Math.max(120, cat.x), CANVAS_WIDTH - 120 - cat.width);
@@ -154,8 +192,14 @@ function update() {
         
         // Check for collision with cat
         if (checkCollision(cat, car)) {
-            sounds.crash().play();
-            gameOver();
+            if (cat.isShielded) {
+                // Just remove the car if shielded
+                cars.splice(index, 1);
+                sounds.collect().play();
+            } else {
+                sounds.crash().play();
+                gameOver();
+            }
         }
     });
     
@@ -244,6 +288,15 @@ function draw() {
     });
 
     // Draw cat
+    if (cat.isShielded) {
+        // Draw shield effect
+        ctx.beginPath();
+        ctx.arc(cat.x + cat.width/2, cat.y + cat.height/2, cat.width * 0.8, 0, Math.PI * 2);
+        ctx.strokeStyle = '#00FFFF';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+    }
+    
     ctx.fillStyle = cat.color;
     ctx.fillRect(cat.x, cat.y, cat.width, cat.height);
     
@@ -258,6 +311,11 @@ function draw() {
     ctx.font = '16px Arial';
     ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
     ctx.fillText('A Wonder Tools Game', 10, CANVAS_HEIGHT - 10);
+    
+    // Draw shields remaining
+    ctx.font = '20px Arial';
+    ctx.fillStyle = '#00FFFF';
+    ctx.fillText(`Shields: ${shields}`, 10, 30);
 }
 
 // Draw a simple tree
@@ -335,10 +393,14 @@ function resetGame() {
     frameCount = 0;
     scrollOffset = 0;
     lastTimestamp = 0;
+    shields = MAX_SHIELDS;
+    keyPressCount = {};
+    lastKeyPressTime = {};
     
-    // Reset cat position
+    // Reset cat position and state
     cat.x = CANVAS_WIDTH / 2;
     cat.y = CANVAS_HEIGHT - 120;
+    cat.isShielded = false;
     
     // Clear arrays
     roads.length = 0;

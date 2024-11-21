@@ -85,16 +85,14 @@
     <div id="gameContainer">
         <canvas id="gameCanvas" width="800" height="600"></canvas>
         <div id="score">Score: 0</div>
-        <div id="gameOver">
+        <div id="loading">Loading game assets...</div>
+        <div id="gameOver" style="display: none;">
             <h1>Game Over!</h1>
             <p>Score: <span id="finalScore">0</span></p>
             <p>High Score: <span id="highScore">0</span></p>
             <button onclick="resetGame()">Play Again</button>
         </div>
-        <div id="loading" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; font-size: 24px;">
-            Loading game assets...
-        </div>
-        <div id="startScreen" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+        <div id="startScreen" style="display: none;">
             <h1>Crossy Cat</h1>
             <p>Use LEFT and RIGHT arrow keys to move</p>
             <p>Collect stars for bonus points</p>
@@ -102,6 +100,7 @@
             <button onclick="startGame()">Start Game</button>
         </div>
     </div>
+    <script src="sprites.js"></script>
     <script src="game.js"></script>
 </body>
 </html>

@@ -37,6 +37,15 @@ const sounds = {
 };
 
 // Load sprites
+const SPRITE_DATA = {
+    cat: 'iVBORw0KGg...==', // base64-encoded cat sprite
+    car_red: 'iVBORw0KGg...==', // base64-encoded red car sprite
+    car_blue: 'iVBORw0KGg...==', // base64-encoded blue car sprite
+    car_yellow: 'iVBORw0KGg...==', // base64-encoded yellow car sprite
+    powerup: 'iVBORw0KGg...==', // base64-encoded powerup sprite
+    tree: 'iVBORw0KGg...==', // base64-encoded tree sprite
+};
+
 const sprites = {
     cat: new Image(),
     carRed: new Image(),
@@ -46,56 +55,44 @@ const sprites = {
     tree: new Image()
 };
 
-// Promise-based sprite loading with timeout
-function loadSprite(sprite, src) {
+// Load all sprites immediately from base64 data
+function loadAllSprites() {
     return new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => {
-            reject(new Error(`Timeout loading sprite: ${src}`));
-        }, 5000); // 5 second timeout
+        try {
+            let loadedCount = 0;
+            const totalSprites = Object.keys(sprites).length;
+            
+            const updateProgress = () => {
+                loadedCount++;
+                const progress = Math.floor((loadedCount / totalSprites) * 100);
+                document.getElementById('loading').textContent = `Loading game assets... ${progress}%`;
+                if (loadedCount === totalSprites) {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('startScreen').style.display = 'block';
+                    resolve();
+                }
+            };
 
-        sprite.onload = () => {
-            clearTimeout(timeout);
-            resolve();
-        };
+            // Set the source of each sprite from the base64 data
+            sprites.cat.onload = updateProgress;
+            sprites.carRed.onload = updateProgress;
+            sprites.carBlue.onload = updateProgress;
+            sprites.carYellow.onload = updateProgress;
+            sprites.powerup.onload = updateProgress;
+            sprites.tree.onload = updateProgress;
 
-        sprite.onerror = () => {
-            clearTimeout(timeout);
-            reject(new Error(`Failed to load sprite: ${src}`));
-        };
-
-        sprite.src = src;
+            sprites.cat.src = SPRITE_DATA.cat;
+            sprites.carRed.src = SPRITE_DATA.car_red;
+            sprites.carBlue.src = SPRITE_DATA.car_blue;
+            sprites.carYellow.src = SPRITE_DATA.car_yellow;
+            sprites.powerup.src = SPRITE_DATA.powerup;
+            sprites.tree.src = SPRITE_DATA.tree;
+        } catch (error) {
+            console.error('Error loading sprites:', error);
+            document.getElementById('loading').textContent = 'Error loading game assets. Please refresh the page.';
+            reject(error);
+        }
     });
-}
-
-// Load all sprites with progress tracking
-async function loadAllSprites() {
-    const totalSprites = Object.keys(sprites).length;
-    let loadedCount = 0;
-
-    const updateProgress = () => {
-        loadedCount++;
-        const progress = Math.floor((loadedCount / totalSprites) * 100);
-        document.getElementById('loading').textContent = `Loading game assets... ${progress}%`;
-    };
-
-    try {
-        await Promise.all([
-            loadSprite(sprites.cat, 'assets/cat.png').then(updateProgress),
-            loadSprite(sprites.carRed, 'assets/car_red.png').then(updateProgress),
-            loadSprite(sprites.carBlue, 'assets/car_blue.png').then(updateProgress),
-            loadSprite(sprites.carYellow, 'assets/car_yellow.png').then(updateProgress),
-            loadSprite(sprites.powerup, 'assets/powerup.png').then(updateProgress),
-            loadSprite(sprites.tree, 'assets/tree.png').then(updateProgress)
-        ]);
-
-        // All sprites loaded successfully
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('startScreen').style.display = 'block';
-    } catch (error) {
-        // Handle loading errors
-        console.error('Error loading sprites:', error);
-        document.getElementById('loading').textContent = 'Error loading game assets. Please refresh the page.';
-    }
 }
 
 // Game variables

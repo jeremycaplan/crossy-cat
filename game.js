@@ -1,8 +1,8 @@
 // Game constants
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 600;
-const SCROLL_SPEED = 1;
-const FORCE_FORWARD_INTERVAL = 120;
+const SCROLL_SPEED = 0.5;
+const FORCE_FORWARD_INTERVAL = 180;
 const POWERUP_CHANCE = 0.1;
 const POWERUP_BONUS = 50;
 
@@ -42,7 +42,8 @@ const sprites = {
     carRed: new Image(),
     carBlue: new Image(),
     carYellow: new Image(),
-    powerup: new Image()
+    powerup: new Image(),
+    tree: new Image()
 };
 
 sprites.cat.src = 'assets/cat.png';
@@ -50,6 +51,7 @@ sprites.carRed.src = 'assets/car_red.png';
 sprites.carBlue.src = 'assets/car_blue.png';
 sprites.carYellow.src = 'assets/car_yellow.png';
 sprites.powerup.src = 'assets/powerup.png';
+sprites.tree.src = 'assets/tree.png';
 
 // Game variables
 let canvas, ctx;
@@ -115,7 +117,7 @@ function handleKeyPress(event) {
 
 // Spawn a new car
 function spawnCar(roadY) {
-    const speed = Math.random() * 2 + 2; // Speed between 2 and 4
+    const speed = Math.random() * 1.5 + 1;
     const goingLeft = Math.random() < 0.5;
     return {
         x: goingLeft ? CANVAS_WIDTH : -60,
@@ -123,7 +125,7 @@ function spawnCar(roadY) {
         speed: goingLeft ? -speed : speed,
         width: 60,
         height: 30,
-        type: Math.floor(Math.random() * 3) // Random car type
+        type: Math.floor(Math.random() * 3)
     };
 }
 
@@ -148,7 +150,7 @@ function update() {
     // Update roads
     roads.forEach(road => {
         road.y += SCROLL_SPEED;
-        if (Math.random() < 0.01) { // 1% chance to spawn a car
+        if (Math.random() < 0.005) {
             cars.push(spawnCar(road.y));
         }
     });
@@ -216,15 +218,26 @@ function draw() {
     ctx.fillStyle = '#64C864';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
+    // Draw trees on both sides (decorative)
+    for (let y = -scrollOffset % 100; y < CANVAS_HEIGHT; y += 100) {
+        // Left side trees
+        ctx.drawImage(sprites.tree, 20, y, 40, 40);
+        ctx.drawImage(sprites.tree, 70, y + 50, 40, 40);
+        
+        // Right side trees
+        ctx.drawImage(sprites.tree, CANVAS_WIDTH - 60, y, 40, 40);
+        ctx.drawImage(sprites.tree, CANVAS_WIDTH - 110, y + 50, 40, 40);
+    }
+
     // Draw roads
     roads.forEach(road => {
         // Draw road
         ctx.fillStyle = '#505050';
-        ctx.fillRect(0, road.y, CANVAS_WIDTH, 40);
+        ctx.fillRect(120, road.y, CANVAS_WIDTH - 240, 40);
         
         // Draw road lines
         ctx.fillStyle = '#ffffff';
-        for (let x = 0; x < CANVAS_WIDTH; x += 40) {
+        for (let x = 120; x < CANVAS_WIDTH - 240; x += 40) {
             ctx.fillRect(x, road.y + 18, 20, 4);
         }
 

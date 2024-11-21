@@ -3,14 +3,15 @@ const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 600;
 const SCROLL_SPEED = 0.5;
 const FORCE_FORWARD_INTERVAL = 180;
-const POWERUP_CHANCE = 0.1;
+const POWERUP_CHANCE = 0.15;
 const POWERUP_BONUS = 50;
 const MAX_SHIELDS = 3;
 const SPEED_MULTIPLIER = 2;
 const REPOSITION_SHIELD_DURATION = 2000; // 2 seconds of protection
-
-// Create sound effects using AudioContext
-const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+const CAR_SPAWN_RATE = 0.015; // Reduced from higher value
+const MIN_CAR_SPACING = 200; // Increased minimum space between cars
+const CAR_SPEED_MIN = 2; // Slightly reduced minimum speed
+const CAR_SPEED_MAX = 4; // Slightly reduced maximum speed
 
 function createBeep(frequency, duration, type = 'sine') {
     const oscillator = audioContext.createOscillator();
@@ -223,8 +224,41 @@ function update() {
     roads.forEach((road, index) => {
         road.y = ((index * 60 + scrollOffset) % (CANVAS_HEIGHT + 60)) - 60;
         
-        if (road.y >= -60 && road.y <= CANVAS_HEIGHT && Math.random() < 0.002) {
-            spawnCar(road.y);
+        // Only spawn cars if road is visible
+        if (road.y >= -60 && road.y <= CANVAS_HEIGHT) {
+            // Check if we should spawn a new car
+            if (Math.random() < CAR_SPAWN_RATE) {
+                // Check if there's enough space from other cars
+                const carsOnRoad = cars.filter(car => 
+                    Math.abs(car.y - road.y) < MIN_CAR_SPACING
+                );
+                
+                if (carsOnRoad.length === 0) {
+                    const direction = Math.random() < 0.5 ? -1 : 1;
+                    const speed = (Math.random() * (CAR_SPEED_MAX - CAR_SPEED_MIN) + CAR_SPEED_MIN) * direction;
+                    const x = direction === 1 ? -50 : CANVAS_WIDTH + 50;
+                    
+                    cars.push({
+                        x,
+                        y: road.y + 15,
+                        width: 40,
+                        height: 30,
+                        speed,
+                        color: getRandomColor()
+                    });
+                }
+            }
+            
+            // Spawn power-ups with increased chance
+            if (Math.random() < POWERUP_CHANCE && !powerups.some(p => Math.abs(p.y - road.y) < 60)) {
+                powerups.push({
+                    x: Math.random() * (CANVAS_WIDTH - 200) + 100,
+                    y: road.y + 15,
+                    width: 20,
+                    height: 20,
+                    collected: false
+                });
+            }
         }
     });
     

@@ -36,16 +36,7 @@ const sounds = {
     move: () => createBeep(440, 0.05)
 };
 
-// Load sprites
-const SPRITE_DATA = {
-    cat: 'iVBORw0KGg...==', // base64-encoded cat sprite
-    car_red: 'iVBORw0KGg...==', // base64-encoded red car sprite
-    car_blue: 'iVBORw0KGg...==', // base64-encoded blue car sprite
-    car_yellow: 'iVBORw0KGg...==', // base64-encoded yellow car sprite
-    powerup: 'iVBORw0KGg...==', // base64-encoded powerup sprite
-    tree: 'iVBORw0KGg...==', // base64-encoded tree sprite
-};
-
+// Initialize sprites
 const sprites = {
     cat: new Image(),
     carRed: new Image(),
@@ -80,14 +71,6 @@ const powerups = [];
 // Initialize game
 function init() {
     console.log('Initializing game...');
-    
-    // Check if sprite data is available
-    if (!window.SPRITE_DATA) {
-        console.error('Sprite data not found');
-        document.getElementById('loading').textContent = 'Error: Game assets not found. Please refresh the page.';
-        return;
-    }
-
     canvas = document.getElementById('gameCanvas');
     ctx = canvas.getContext('2d');
     
@@ -97,35 +80,30 @@ function init() {
     function onSpriteLoad() {
         loadedSprites++;
         console.log(`Loaded sprite ${loadedSprites}/${totalSprites}`);
+        document.getElementById('loading').textContent = `Loading game assets... ${Math.floor((loadedSprites/totalSprites) * 100)}%`;
         
         if (loadedSprites === totalSprites) {
             console.log('All sprites loaded');
             finishInitialization();
         }
     }
-    
-    // Load all sprites
-    try {
-        Object.keys(sprites).forEach(key => {
-            sprites[key].onload = onSpriteLoad;
-            sprites[key].onerror = (error) => {
-                console.error(`Error loading sprite: ${key}`, error);
-                document.getElementById('loading').textContent = 'Error loading game assets. Please refresh.';
-            };
-        });
-        
-        // Set sprite sources
-        sprites.cat.src = SPRITE_DATA.cat;
-        sprites.carRed.src = SPRITE_DATA.car_red;
-        sprites.carBlue.src = SPRITE_DATA.car_blue;
-        sprites.carYellow.src = SPRITE_DATA.car_yellow;
-        sprites.powerup.src = SPRITE_DATA.powerup;
-        sprites.tree.src = SPRITE_DATA.tree;
-        
-    } catch (error) {
-        console.error('Error loading sprites:', error);
-        document.getElementById('loading').textContent = 'Error initializing game. Please refresh.';
-    }
+
+    // Set up sprite loading
+    Object.keys(sprites).forEach(key => {
+        sprites[key].onload = onSpriteLoad;
+        sprites[key].onerror = (error) => {
+            console.error(`Error loading sprite: ${key}`, error);
+            document.getElementById('loading').textContent = 'Error loading game assets. Please refresh.';
+        };
+    });
+
+    // Load sprites directly from files
+    sprites.cat.src = 'assets/cat.png';
+    sprites.carRed.src = 'assets/car_red.png';
+    sprites.carBlue.src = 'assets/car_blue.png';
+    sprites.carYellow.src = 'assets/car_yellow.png';
+    sprites.powerup.src = 'assets/powerup.png';
+    sprites.tree.src = 'assets/tree.png';
 }
 
 function finishInitialization() {

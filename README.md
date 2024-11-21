@@ -27,3 +27,16 @@ To run the game locally:
 - HTML5 Canvas
 - JavaScript
 - CSS3
+
+## Created with Windsurf Cascade
+
+This game was developed using Windsurf Cascade, an innovative AI-powered development environment. Windsurf Cascade is a groundbreaking tool that combines:
+
+- Real-time AI assistance
+- Intelligent code generation
+- Seamless project management
+- Automated deployment workflows
+
+The entire development process, from initial concept to final deployment, was guided by Cascade's AI capabilities, demonstrating the potential of AI-assisted game development. The project showcases how Windsurf Cascade can help create engaging, well-structured web applications while maintaining clean code and proper documentation.
+
+Learn more about Windsurf and Cascade at [Codeium](https://codeium.com), where cutting-edge AI meets software development.

@@ -36,16 +36,6 @@ const sounds = {
     move: () => createBeep(440, 0.05)
 };
 
-// Initialize sprites
-const sprites = {
-    cat: new Image(),
-    carRed: new Image(),
-    carBlue: new Image(),
-    carYellow: new Image(),
-    powerup: new Image(),
-    tree: new Image()
-};
-
 // Game variables
 let canvas, ctx;
 let gameState = 'start';
@@ -57,11 +47,12 @@ let lastTimestamp = 0;
 
 // Game objects
 const cat = {
-    width: 40,
-    height: 40,
+    width: 30,
+    height: 30,
     x: CANVAS_WIDTH / 2,
     y: CANVAS_HEIGHT - 120,
-    speed: 4
+    speed: 4,
+    color: '#FFD700' // Gold color for the cat
 };
 
 const roads = [];
@@ -74,39 +65,6 @@ function init() {
     canvas = document.getElementById('gameCanvas');
     ctx = canvas.getContext('2d');
     
-    let loadedSprites = 0;
-    const totalSprites = Object.keys(sprites).length;
-    
-    function onSpriteLoad() {
-        loadedSprites++;
-        console.log(`Loaded sprite ${loadedSprites}/${totalSprites}`);
-        document.getElementById('loading').textContent = `Loading game assets... ${Math.floor((loadedSprites/totalSprites) * 100)}%`;
-        
-        if (loadedSprites === totalSprites) {
-            console.log('All sprites loaded');
-            finishInitialization();
-        }
-    }
-
-    // Set up sprite loading
-    Object.keys(sprites).forEach(key => {
-        sprites[key].onload = onSpriteLoad;
-        sprites[key].onerror = (error) => {
-            console.error(`Error loading sprite: ${key}`, error);
-            document.getElementById('loading').textContent = 'Error loading game assets. Please refresh.';
-        };
-    });
-
-    // Load sprites directly from files
-    sprites.cat.src = '/crossy-cat/assets/cat.png';
-    sprites.carRed.src = '/crossy-cat/assets/car_red.png';
-    sprites.carBlue.src = '/crossy-cat/assets/car_blue.png';
-    sprites.carYellow.src = '/crossy-cat/assets/car_yellow.png';
-    sprites.powerup.src = '/crossy-cat/assets/powerup.png';
-    sprites.tree.src = '/crossy-cat/assets/tree.png';
-}
-
-function finishInitialization() {
     // Initialize roads
     for (let y = 0; y < CANVAS_HEIGHT + 60; y += 60) {
         roads.push({
@@ -120,7 +78,7 @@ function finishInitialization() {
     // Add event listeners
     document.addEventListener('keydown', handleKeyPress);
     
-    // Hide loading screen and show start screen
+    // Hide loading screen and show start screen immediately
     document.getElementById('loading').style.display = 'none';
     document.getElementById('startScreen').style.display = 'block';
     
@@ -132,106 +90,97 @@ function handleKeyPress(event) {
     if (gameState === 'playing') {
         switch (event.key) {
             case 'ArrowLeft':
-                if (cat.x > 0) {
-                    cat.x -= cat.speed;
-                    sounds.move().play();
-                }
+                cat.x -= cat.speed;
+                sounds.move().play();
                 break;
             case 'ArrowRight':
-                if (cat.x < CANVAS_WIDTH - cat.width) {
-                    cat.x += cat.speed;
-                    sounds.move().play();
-                }
+                cat.x += cat.speed;
+                sounds.move().play();
                 break;
         }
+        cat.x = Math.min(Math.max(120, cat.x), CANVAS_WIDTH - 120 - cat.width);
+    } else if (event.key === 'Enter' && gameState === 'start') {
+        startGame();
     }
 }
 
 // Spawn a new car
 function spawnCar(roadY) {
-    const speed = Math.random() * 1.5 + 1;
-    const goingLeft = Math.random() < 0.5;
-    return {
-        x: goingLeft ? CANVAS_WIDTH : -60,
+    const speed = 1 + Math.random() * 1.5;
+    const direction = Math.random() < 0.5 ? -1 : 1;
+    const x = direction === 1 ? -50 : CANVAS_WIDTH + 50;
+    const carColors = ['#FF0000', '#0000FF', '#FFFF00']; // Red, Blue, Yellow
+    
+    cars.push({
+        x: x,
         y: roadY,
-        speed: goingLeft ? -speed : speed,
-        width: 60,
+        width: 50,
         height: 30,
-        type: Math.floor(Math.random() * 3)
-    };
+        speed: speed * direction,
+        color: carColors[Math.floor(Math.random() * carColors.length)]
+    });
 }
 
 // Update game state
 function update() {
     if (gameState !== 'playing') return;
-
-    // Scroll roads and spawn cars
+    
+    frameCount++;
     scrollOffset += SCROLL_SPEED;
-    if (scrollOffset >= 60) {
-        scrollOffset = 0;
-        roads.pop();
-        roads.unshift({
-            y: roads[0].y - 60,
-            hasPowerup: Math.random() < POWERUP_CHANCE,
-            powerupX: Math.random() * (CANVAS_WIDTH - 30),
-            powerupCollected: false
-        });
-        score++;
+    
+    // Force forward movement periodically
+    if (frameCount % FORCE_FORWARD_INTERVAL === 0) {
+        cat.y -= 30;
+        score += 10;
     }
-
-    // Update roads
-    roads.forEach(road => {
-        road.y += SCROLL_SPEED;
-        if (Math.random() < 0.005) {
-            cars.push(spawnCar(road.y));
+    
+    // Update roads and spawn cars
+    roads.forEach((road, index) => {
+        road.y = ((index * 60 + scrollOffset) % (CANVAS_HEIGHT + 60)) - 60;
+        
+        if (road.y >= -60 && road.y <= CANVAS_HEIGHT && Math.random() < 0.005) {
+            spawnCar(road.y);
         }
     });
-
+    
     // Update cars
-    for (let i = cars.length - 1; i >= 0; i--) {
-        cars[i].x += cars[i].speed;
-        cars[i].y += SCROLL_SPEED;
+    cars.forEach((car, index) => {
+        car.x += car.speed;
         
-        // Remove off-screen cars
-        if (cars[i].x < -60 || cars[i].x > CANVAS_WIDTH || cars[i].y > CANVAS_HEIGHT) {
-            cars.splice(i, 1);
-            continue;
+        // Remove cars that are off screen
+        if (car.x < -100 || car.x > CANVAS_WIDTH + 100) {
+            cars.splice(index, 1);
         }
-
+        
         // Check for collision with cat
-        if (checkCollision(cat, cars[i])) {
+        if (checkCollision(cat, car)) {
+            sounds.crash().play();
             gameOver();
-            return;
         }
-    }
-
+    });
+    
     // Check for powerup collection
     roads.forEach(road => {
         if (road.hasPowerup && !road.powerupCollected) {
-            const powerupRect = {
+            const powerup = {
                 x: road.powerupX,
                 y: road.y,
                 width: 30,
                 height: 30
             };
-            if (checkCollision(cat, powerupRect)) {
+            
+            if (checkCollision(cat, powerup)) {
                 road.powerupCollected = true;
                 score += POWERUP_BONUS;
                 sounds.collect().play();
             }
         }
     });
-
-    // Force forward movement
-    frameCount++;
-    if (frameCount >= FORCE_FORWARD_INTERVAL) {
-        frameCount = 0;
-        cat.y -= cat.speed;
-    }
-
-    // Keep cat on screen
+    
+    // Keep cat within bounds
+    cat.x = Math.min(Math.max(120, cat.x), CANVAS_WIDTH - 120 - cat.width);
     cat.y = Math.min(Math.max(0, cat.y), CANVAS_HEIGHT - cat.height);
-
+    
     // Update score display
     document.getElementById('score').textContent = `Score: ${score}`;
 }
@@ -246,19 +195,20 @@ function checkCollision(rect1, rect2) {
 
 // Draw game objects
 function draw() {
-    // Clear canvas
+    // Clear canvas with grass color
     ctx.fillStyle = '#64C864';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-    // Draw trees on both sides (decorative)
+    // Draw decorative trees (simple triangles)
     for (let y = -scrollOffset % 100; y < CANVAS_HEIGHT; y += 100) {
         // Left side trees
-        ctx.drawImage(sprites.tree, 20, y, 40, 40);
-        ctx.drawImage(sprites.tree, 70, y + 50, 40, 40);
+        ctx.fillStyle = '#006400';
+        drawTree(20, y);
+        drawTree(70, y + 50);
         
         // Right side trees
-        ctx.drawImage(sprites.tree, CANVAS_WIDTH - 60, y, 40, 40);
-        ctx.drawImage(sprites.tree, CANVAS_WIDTH - 110, y + 50, 40, 40);
+        drawTree(CANVAS_WIDTH - 60, y);
+        drawTree(CANVAS_WIDTH - 110, y + 50);
     }
 
     // Draw roads
@@ -273,33 +223,78 @@ function draw() {
             ctx.fillRect(x, road.y + 18, 20, 4);
         }
 
-        // Draw powerup
+        // Draw powerup (star)
         if (road.hasPowerup && !road.powerupCollected) {
-            ctx.drawImage(sprites.powerup, road.powerupX, road.y, 30, 30);
+            drawStar(road.powerupX + 15, road.y + 15, 5, 15, 7, '#FFD700');
         }
     });
 
     // Draw cars
     cars.forEach(car => {
-        const carSprite = [sprites.carRed, sprites.carBlue, sprites.carYellow][car.type];
-        // Flip the car sprite if moving left
-        if (car.speed < 0) {
-            ctx.save();
-            ctx.scale(-1, 1);
-            ctx.drawImage(carSprite, -car.x - car.width, car.y, car.width, car.height);
-            ctx.restore();
+        ctx.fillStyle = car.color;
+        ctx.fillRect(car.x, car.y + 5, car.width, car.height - 10);
+        
+        // Add simple car details
+        ctx.fillStyle = '#000000';
+        if (car.speed > 0) {
+            ctx.fillRect(car.x + car.width - 10, car.y + 8, 5, car.height - 16);
         } else {
-            ctx.drawImage(carSprite, car.x, car.y, car.width, car.height);
+            ctx.fillRect(car.x + 5, car.y + 8, 5, car.height - 16);
         }
     });
 
     // Draw cat
-    ctx.drawImage(sprites.cat, cat.x, cat.y, cat.width, cat.height);
+    ctx.fillStyle = cat.color;
+    ctx.fillRect(cat.x, cat.y, cat.width, cat.height);
+    
+    // Add simple cat details (ears)
+    ctx.beginPath();
+    ctx.moveTo(cat.x, cat.y);
+    ctx.lineTo(cat.x + 10, cat.y - 10);
+    ctx.lineTo(cat.x + 20, cat.y);
+    ctx.fill();
 
     // Draw Wonder Tools label
     ctx.font = '16px Arial';
     ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
     ctx.fillText('A Wonder Tools Game', 10, CANVAS_HEIGHT - 10);
+}
+
+// Draw a simple tree
+function drawTree(x, y) {
+    ctx.beginPath();
+    ctx.moveTo(x, y + 40);
+    ctx.lineTo(x + 20, y);
+    ctx.lineTo(x + 40, y + 40);
+    ctx.fill();
+}
+
+// Draw a star shape
+function drawStar(cx, cy, spikes, outerRadius, innerRadius, color) {
+    let rot = Math.PI / 2 * 3;
+    let x = cx;
+    let y = cy;
+    const step = Math.PI / spikes;
+
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - outerRadius);
+    
+    for(let i = 0; i < spikes; i++) {
+        x = cx + Math.cos(rot) * outerRadius;
+        y = cy + Math.sin(rot) * outerRadius;
+        ctx.lineTo(x, y);
+        rot += step;
+
+        x = cx + Math.cos(rot) * innerRadius;
+        y = cy + Math.sin(rot) * innerRadius;
+        ctx.lineTo(x, y);
+        rot += step;
+    }
+    
+    ctx.lineTo(cx, cy - outerRadius);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
 }
 
 // Game loop
@@ -331,18 +326,26 @@ function gameOver() {
     document.getElementById('finalScore').textContent = score;
     document.getElementById('highScore').textContent = highScore;
     document.getElementById('gameOver').style.display = 'block';
-    sounds.crash().play();
 }
 
 // Reset game
 function resetGame() {
+    // Reset game state
     score = 0;
     frameCount = 0;
     scrollOffset = 0;
+    lastTimestamp = 0;
+    
+    // Reset cat position
     cat.x = CANVAS_WIDTH / 2;
     cat.y = CANVAS_HEIGHT - 120;
+    
+    // Clear arrays
     roads.length = 0;
     cars.length = 0;
+    powerups.length = 0;
+    
+    // Initialize roads
     for (let y = 0; y < CANVAS_HEIGHT + 60; y += 60) {
         roads.push({
             y: y,
@@ -351,6 +354,8 @@ function resetGame() {
             powerupCollected: false
         });
     }
+    
+    // Start game
     startGame();
 }
 

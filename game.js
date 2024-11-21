@@ -46,6 +46,24 @@ const sprites = {
     tree: new Image()
 };
 
+let loadedSprites = 0;
+const totalSprites = 6;
+
+function onSpriteLoad() {
+    loadedSprites++;
+    if (loadedSprites === totalSprites) {
+        document.getElementById('startScreen').style.display = 'block';
+        document.getElementById('loading').style.display = 'none';
+    }
+}
+
+sprites.cat.onload = onSpriteLoad;
+sprites.carRed.onload = onSpriteLoad;
+sprites.carBlue.onload = onSpriteLoad;
+sprites.carYellow.onload = onSpriteLoad;
+sprites.powerup.onload = onSpriteLoad;
+sprites.tree.onload = onSpriteLoad;
+
 sprites.cat.src = 'assets/cat.png';
 sprites.carRed.src = 'assets/car_red.png';
 sprites.carBlue.src = 'assets/car_blue.png';

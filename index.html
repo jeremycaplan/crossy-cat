@@ -43,6 +43,7 @@
             z-index: 2;
         }
         #startScreen {
+            display: none;
             position: absolute;
             top: 50%;
             left: 50%;
@@ -53,6 +54,14 @@
             padding: 20px;
             border-radius: 10px;
             z-index: 2;
+        }
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            font-size: 24px;
         }
         button {
             background-color: #4CAF50;
@@ -82,7 +91,10 @@
             <p>High Score: <span id="highScore">0</span></p>
             <button onclick="resetGame()">Play Again</button>
         </div>
-        <div id="startScreen">
+        <div id="loading" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; font-size: 24px;">
+            Loading game assets...
+        </div>
+        <div id="startScreen" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
             <h1>Crossy Cat</h1>
             <p>Use LEFT and RIGHT arrow keys to move</p>
             <p>Collect stars for bonus points</p>

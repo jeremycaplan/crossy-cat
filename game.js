@@ -7,6 +7,7 @@ const POWERUP_CHANCE = 0.1;
 const POWERUP_BONUS = 50;
 const MAX_SHIELDS = 3;
 const SPEED_MULTIPLIER = 2;
+const REPOSITION_SHIELD_DURATION = 2000; // 2 seconds of protection
 
 // Create sound effects using AudioContext
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -74,7 +75,8 @@ const cat = {
     y: CANVAS_HEIGHT - 120,
     speed: 4,
     color: '#FFD700', // Gold color for the cat
-    isShielded: false
+    isShielded: false,
+    hasRepositionShield: false
 };
 
 const roads = [];
@@ -149,10 +151,13 @@ function handleKeyPress(event) {
             case ' ': // Spacebar activates shield
                 if (shields > 0 && !cat.isShielded) {
                     cat.isShielded = true;
+                    cat.hasRepositionShield = false; // Regular shield activation
                     shields--;
                     setTimeout(() => {
-                        cat.isShielded = false;
-                    }, 3000); // Shield lasts 3 seconds
+                        if (!cat.hasRepositionShield) { // Only remove if not a reposition shield
+                            cat.isShielded = false;
+                        }
+                    }, 3000);
                 }
                 break;
         }
@@ -191,7 +196,7 @@ function update() {
         cat.y -= 30;
         score += 10;
         
-        // If cat is too high, move everything down
+        // If cat is too high, move everything down and activate temporary shield
         if (cat.y < CANVAS_HEIGHT / 4) {
             const offset = CANVAS_HEIGHT / 3 - cat.y;
             cat.y += offset;
@@ -199,6 +204,18 @@ function update() {
             // Move all game objects down
             cars.forEach(car => car.y += offset);
             roads.forEach(road => road.y += offset);
+            
+            // Activate temporary shield without using player's shields
+            if (!cat.isShielded) {
+                cat.isShielded = true;
+                cat.hasRepositionShield = true; // Flag to not count this shield usage
+                setTimeout(() => {
+                    if (cat.hasRepositionShield) { // Only remove shield if it was from repositioning
+                        cat.isShielded = false;
+                        cat.hasRepositionShield = false;
+                    }
+                }, REPOSITION_SHIELD_DURATION);
+            }
         }
     }
     
@@ -426,7 +443,7 @@ function startGame() {
 function gameOver() {
     gameState = 'gameOver';
     const wasHighScore = score > highScore;
-    const beatPreviousScore = score > previousScore;
+    const beatPreviousScore = score > previousScore && previousScore > 0; // Only count if previous score exists
     highScore = Math.max(score, highScore);
     
     let message = '';
@@ -459,6 +476,7 @@ function resetGame() {
     cat.x = CANVAS_WIDTH / 2;
     cat.y = CANVAS_HEIGHT - 120;
     cat.isShielded = false;
+    cat.hasRepositionShield = false;
     
     // Clear arrays
     roads.length = 0;

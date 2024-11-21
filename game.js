@@ -316,18 +316,19 @@ function draw() {
     ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
     ctx.fillText('A Wonder Tools Game', 10, CANVAS_HEIGHT - 10);
     
-    // Draw shields remaining
+    // Draw score and shields in top-right corner
     ctx.font = 'bold 24px Arial';
+    ctx.lineWidth = 3;
+    
+    // Draw shield counter with icon
+    const shieldText = `🛡️ ${shields}`;
     ctx.fillStyle = '#00FFFF';
     ctx.strokeStyle = '#000000';
-    ctx.lineWidth = 2;
-    const shieldText = `Shields: ${shields}`;
-    ctx.strokeText(shieldText, 10, 30);
-    ctx.fillText(shieldText, 10, 30);
+    ctx.strokeText(shieldText, CANVAS_WIDTH - 280, 30);
+    ctx.fillText(shieldText, CANVAS_WIDTH - 280, 30);
     
     // Draw score
     const scoreText = `Score: ${score}`;
-    ctx.font = 'bold 24px Arial';
     ctx.fillStyle = '#FFFFFF';
     ctx.strokeStyle = '#000000';
     ctx.strokeText(scoreText, CANVAS_WIDTH - 150, 30);

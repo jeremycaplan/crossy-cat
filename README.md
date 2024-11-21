@@ -11,7 +11,7 @@ A fun browser-based arcade game where you guide a cat across busy roads while co
 
 ## Play Online
 
-Visit [GitHub Pages URL will be here] to play the game directly in your browser!
+Visit [https://jeremycaplan.github.io/crossy-cat](https://jeremycaplan.github.io/crossy-cat) to play the game directly in your browser!
 
 ## Local Development
 

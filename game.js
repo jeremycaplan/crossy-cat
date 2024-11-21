@@ -106,7 +106,7 @@ function handleKeyPress(event) {
 
 // Spawn a new car
 function spawnCar(roadY) {
-    const speed = 1 + Math.random() * 1.5;
+    const speed = 0.5 + Math.random() * 1;
     const direction = Math.random() < 0.5 ? -1 : 1;
     const x = direction === 1 ? -50 : CANVAS_WIDTH + 50;
     const carColors = ['#FF0000', '#0000FF', '#FFFF00']; // Red, Blue, Yellow
@@ -129,7 +129,7 @@ function update() {
     scrollOffset += SCROLL_SPEED;
     
     // Force forward movement periodically
-    if (frameCount % FORCE_FORWARD_INTERVAL === 0) {
+    if (frameCount % (FORCE_FORWARD_INTERVAL * 1.5) === 0) {
         cat.y -= 30;
         score += 10;
     }
@@ -138,7 +138,7 @@ function update() {
     roads.forEach((road, index) => {
         road.y = ((index * 60 + scrollOffset) % (CANVAS_HEIGHT + 60)) - 60;
         
-        if (road.y >= -60 && road.y <= CANVAS_HEIGHT && Math.random() < 0.005) {
+        if (road.y >= -60 && road.y <= CANVAS_HEIGHT && Math.random() < 0.002) {
             spawnCar(road.y);
         }
     });
